@@ -272,6 +272,7 @@ if (confirmPaymentBtn) {
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.aoBJe4DN');
   if (!btn) return;
+  if (btn.disabled) return;
 
   const plan      = btn.dataset.plan;
   const solAmount = btn.dataset.sol;
