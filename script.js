@@ -140,9 +140,150 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// ── Connect Wallet Buttons — stub for custom implementation ───────────────────
-// TODO: Add your wallet connection logic here.
-// All "Connect Wallet" buttons have the class .connect-wallet-btn
-// The navbar button has id="connectWalletBtn"
-// The hero button has id="heroConnectBtn"
-// Pricing plan buttons: id="freePlanBtn", and buttons with data-plan attribute
+// ── Wallet Connection & Payment Flow ──────────────────────────────────────────
+const walletModal    = document.getElementById('walletModal');
+const paymentModal   = document.getElementById('paymentModal');
+const paymentDetails = document.getElementById('paymentDetails');
+const toast          = document.getElementById('toast');
+
+let connectedWallet = null;
+let pendingPlan     = null;
+
+/** Show a toast notification */
+function showToast(msg, durationMs = 3500) {
+  if (!toast) return;
+  toast.removeAttribute('hidden');
+  toast.textContent = msg;
+  void toast.offsetWidth; // force reflow so transition plays
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.setAttribute('hidden', ''), 350);
+  }, durationMs);
+}
+
+/** Open the wallet selection modal */
+function openWalletModal() {
+  if (!walletModal) return;
+  walletModal.removeAttribute('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+/** Close the wallet modal */
+function closeWalletModal() {
+  if (!walletModal) return;
+  walletModal.setAttribute('hidden', '');
+  document.body.style.overflow = '';
+}
+
+/** Update all wallet button UI to reflect connected state */
+function setWalletConnectedUI(address) {
+  const shortened = address.slice(0, 4) + '…' + address.slice(-4);
+
+  document.querySelectorAll('.wA3qlCkq').forEach(el => {
+    el.classList.remove('aoBJe4DN');
+    el.classList.add('wallet-connected');
+    el.innerHTML = `<span class="wallet-dot"></span>${shortened}`;
+    el.disabled = true;
+  });
+}
+
+/** Simulate wallet connection for a given wallet name */
+function connectWallet(walletName) {
+  closeWalletModal();
+  showToast(`Connecting to ${walletName}…`);
+
+  setTimeout(() => {
+    const fakeAddress =
+      'So1' +
+      Math.random().toString(36).substring(2, 10).toUpperCase() +
+      'pump' +
+      Math.random().toString(36).substring(2, 6).toUpperCase();
+    connectedWallet = { name: walletName, address: fakeAddress };
+
+    setWalletConnectedUI(fakeAddress);
+    showToast(`✓ ${walletName} connected: ${fakeAddress.slice(0, 4)}…${fakeAddress.slice(-4)}`);
+
+    if (pendingPlan) {
+      setTimeout(() => openPaymentModal(pendingPlan), 600);
+      pendingPlan = null;
+    }
+  }, 1200);
+}
+
+/** Open the payment confirmation modal */
+function openPaymentModal(plan) {
+  if (!paymentModal || !paymentDetails) return;
+  paymentDetails.textContent =
+    `You are about to pay ${plan.sol} SOL for the ${plan.name} plan. ` +
+    `This will be sent from your connected wallet.`;
+  paymentModal.removeAttribute('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+/** Close the payment modal */
+function closePaymentModal() {
+  if (!paymentModal) return;
+  paymentModal.setAttribute('hidden', '');
+  document.body.style.overflow = '';
+}
+
+// Wallet option clicks
+document.querySelectorAll('.wallet-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    if (opt.classList.contains('loading')) return;
+    opt.classList.add('loading');
+    connectWallet(opt.dataset.wallet);
+  });
+});
+
+// Close wallet modal button
+const closeWalletBtn = document.getElementById('closeWalletModal');
+if (closeWalletBtn) closeWalletBtn.addEventListener('click', closeWalletModal);
+
+// Close modals on backdrop click
+[walletModal, paymentModal].forEach(modal => {
+  if (!modal) return;
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+    }
+  });
+});
+
+// Cancel payment
+const cancelPaymentBtn = document.getElementById('cancelPayment');
+if (cancelPaymentBtn) cancelPaymentBtn.addEventListener('click', closePaymentModal);
+
+// Confirm payment (stub — replace with real on-chain tx)
+const confirmPaymentBtn = document.getElementById('confirmPayment');
+if (confirmPaymentBtn) {
+  confirmPaymentBtn.addEventListener('click', () => {
+    closePaymentModal();
+    showToast('⏳ Transaction submitted… waiting for confirmation.');
+    setTimeout(() => {
+      showToast('✓ Payment confirmed! Welcome to PumpAnalyzer.', 5000);
+    }, 2500);
+  });
+}
+
+// All "Connect Wallet" / plan-purchase triggers
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.aoBJe4DN');
+  if (!btn) return;
+
+  const plan      = btn.dataset.plan;
+  const solAmount = btn.dataset.sol;
+
+  if (plan && solAmount) {
+    if (!connectedWallet) {
+      pendingPlan = { name: plan, sol: solAmount };
+      openWalletModal();
+    } else {
+      openPaymentModal({ name: plan, sol: solAmount });
+    }
+  } else {
+    if (!connectedWallet) openWalletModal();
+  }
+});
