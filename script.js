@@ -142,3 +142,143 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     }
   });
 });
+
+// ── Wallet State ───────────────────────────────────────────────────────────────
+const walletState = {
+  connected: false,
+  address: null,
+  wallet: null,
+  pendingPlan: null,
+  pendingSol: null,
+};
+
+// Simulated truncated wallet address
+function generateMockWalletAddress() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
+  const rand = (n) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return rand(4) + '...' + rand(4);
+}
+
+// ── Wallet Modal ───────────────────────────────────────────────────────────────
+const walletModal   = document.getElementById('walletModal');
+const walletClose   = document.getElementById('walletModalClose');
+const connectBtns   = document.querySelectorAll('#connectWalletBtn, .connect-wallet-trigger');
+
+function openWalletModal() {
+  if (walletState.connected) return;
+  walletModal.classList.add('open');
+  const card = walletModal.querySelector('.wallet-modal-card');
+  if (card && card.focus) card.focus();
+}
+
+function closeWalletModal() {
+  walletModal.classList.remove('open');
+}
+
+connectBtns.forEach(btn => btn.addEventListener('click', openWalletModal));
+
+walletClose && walletClose.addEventListener('click', closeWalletModal);
+
+// Close on backdrop click
+walletModal && walletModal.addEventListener('click', (e) => {
+  if (e.target === walletModal) closeWalletModal();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeWalletModal();
+    closePaymentModal();
+  }
+});
+
+// ── Wallet Option Click → Simulate Connection ──────────────────────────────────
+document.querySelectorAll('.wallet-option').forEach(option => {
+  option.addEventListener('click', () => {
+    const walletName = option.dataset.wallet;
+
+    // Show loading state
+    option.classList.add('wallet-option-loading');
+    option.disabled = true;
+    option.querySelector('.wallet-option-name').textContent = 'Connecting...';
+
+    setTimeout(() => {
+      walletState.connected = true;
+      walletState.wallet    = walletName;
+      walletState.address   = generateMockWalletAddress();
+
+      closeWalletModal();
+      updateNavbarWalletButton();
+
+      option.classList.remove('wallet-option-loading');
+      option.disabled = false;
+      option.querySelector('.wallet-option-name').textContent = walletName;
+
+      // If the user clicked a Buy button before connecting, open payment modal now
+      if (walletState.pendingPlan) {
+        openPaymentModal(walletState.pendingPlan, walletState.pendingSol);
+        walletState.pendingPlan = null;
+        walletState.pendingSol  = null;
+      }
+    }, 1000);
+  });
+});
+
+function updateNavbarWalletButton() {
+  const btn = document.getElementById('connectWalletBtn');
+  if (!btn) return;
+
+  btn.className = 'wallet-connected nav-cta';
+  btn.innerHTML = walletState.address;
+  btn.disabled  = true;
+}
+
+// ── Payment Modal ──────────────────────────────────────────────────────────────
+const paymentModal      = document.getElementById('paymentModal');
+const paymentDesc       = document.getElementById('paymentModalDesc');
+const paymentCancelBtn  = document.getElementById('paymentCancelBtn');
+const paymentConfirmBtn = document.getElementById('paymentConfirmBtn');
+
+function openPaymentModal(plan, sol) {
+  paymentDesc.textContent = `Confirm Payment — ${sol} SOL to PumpAnalyzer for the ${plan} plan. Confirm?`;
+  paymentModal.classList.add('open');
+}
+
+function closePaymentModal() {
+  paymentModal && paymentModal.classList.remove('open');
+}
+
+paymentCancelBtn && paymentCancelBtn.addEventListener('click', closePaymentModal);
+
+paymentModal && paymentModal.addEventListener('click', (e) => {
+  if (e.target === paymentModal) closePaymentModal();
+});
+
+paymentConfirmBtn && paymentConfirmBtn.addEventListener('click', () => {
+  closePaymentModal();
+  showToast('Payment sent! 🎉');
+});
+
+// ── Buy SOL Buttons ────────────────────────────────────────────────────────────
+document.querySelectorAll('.buy-sol-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!walletState.connected) {
+      // Store purchase intent — payment modal will open after wallet connects
+      walletState.pendingPlan = btn.dataset.plan;
+      walletState.pendingSol  = btn.dataset.sol;
+      openWalletModal();
+      return;
+    }
+    openPaymentModal(btn.dataset.plan, btn.dataset.sol);
+  });
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+const toastEl = document.getElementById('toast');
+
+function showToast(message) {
+  if (!toastEl) return;
+  toastEl.textContent = message;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), 3500);
+}

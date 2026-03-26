@@ -1073,3 +1073,249 @@ p  { color: var(--text-secondary); }
   .btn-lg { width: 100%; justify-content: center; }
   .dashboard-stats { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---------- SOL Price Label ---------- */
+.price-sol {
+  font-size: 0.85rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ---------- Wallet Button ---------- */
+.btn-wallet {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+  color: #ffffff;
+  border: none;
+}
+
+.btn-wallet:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-purple), var(--glow-cyan);
+  filter: brightness(1.12);
+}
+
+/* ---------- Wallet Connected State ---------- */
+.wallet-connected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(0,255,136,0.1);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-green);
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: default;
+}
+
+.wallet-connected::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+  flex-shrink: 0;
+}
+
+/* ---------- Wallet Modal ---------- */
+.wallet-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.wallet-modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.wallet-modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 1rem;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+}
+
+.wallet-modal.open .wallet-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.wallet-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.wallet-modal-header h3 {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.wallet-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+  transition: color var(--transition);
+}
+
+.wallet-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.wallet-modal-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.wallet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.wallet-option:hover {
+  border-color: var(--accent-purple);
+  background: var(--bg-card-h);
+  box-shadow: var(--glow-purple);
+}
+
+.wallet-option-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.wallet-option-name {
+  flex: 1;
+}
+
+.wallet-option-loading::after {
+  content: '…';
+  animation: dots 1s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0%, 100% { content: '…'; }
+  33%       { content: '·'; }
+  66%       { content: '··'; }
+}
+
+/* ---------- Payment Modal ---------- */
+.payment-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.payment-modal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.payment-modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: 100%;
+  max-width: 380px;
+  margin: 1rem;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+}
+
+.payment-modal.open .payment-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.payment-modal-card h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.payment-modal-desc {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.payment-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1300;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-green);
+  color: var(--text-primary);
+  padding: 0.85rem 1.4rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: var(--glow-green);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
