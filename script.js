@@ -1,196 +1,7 @@
 /* PumpAnalyzer — script.js */
 
-// ── Wallet State ───────────────────────────────────────────────────────────────
-const walletState = {
-  connected: false,
-  address: null,
-  wallet: null,
-  pendingPlan: null,
-  pendingSol: null
-};
-
-const mockAddresses = [
-  'Ab3dR...f9Kz',
-  'Xy7mP...2wQn',
-  'Gh5kL...8vBt',
-  'Mn9jF...4rDs',
-  'Pq2eW...6cYu'
-];
-
-// ── DOM References ─────────────────────────────────────────────────────────────
-const navbar          = document.getElementById('navbar');
-const connectWalletBtn= document.getElementById('connectWalletBtn');
-const heroConnectBtn  = document.getElementById('heroConnectBtn');
-const walletModal     = document.getElementById('walletModal');
-const closeWalletBtn  = document.getElementById('closeWalletModal');
-const paymentModal    = document.getElementById('paymentModal');
-const paymentDetails  = document.getElementById('paymentDetails');
-const cancelPayment   = document.getElementById('cancelPayment');
-const confirmPayment  = document.getElementById('confirmPayment');
-const freePlanBtn     = document.getElementById('freePlanBtn');
-const toast           = document.getElementById('toast');
-
-// ── Toast ──────────────────────────────────────────────────────────────────────
-function showToast(msg) {
-  if (!toast) return;
-  toast.removeAttribute('hidden');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.setAttribute('hidden', ''), 300);
-  }, 3000);
-}
-
-// ── Wallet Modal ───────────────────────────────────────────────────────────────
-function openWalletModal() {
-  if (!walletModal) return;
-  walletModal.removeAttribute('hidden');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeWalletModal() {
-  if (!walletModal) return;
-  walletModal.setAttribute('hidden', '');
-  document.body.style.overflow = '';
-}
-
-if (closeWalletBtn) {
-  closeWalletBtn.addEventListener('click', closeWalletModal);
-}
-
-// Close on backdrop click
-if (walletModal) {
-  walletModal.addEventListener('click', (e) => {
-    if (e.target === walletModal) closeWalletModal();
-  });
-}
-
-// Wallet option click
-document.querySelectorAll('.wallet-option').forEach(option => {
-  option.addEventListener('click', () => {
-    const walletName    = option.dataset.wallet;
-    const nameEl        = option.querySelector('.wallet-option-name');
-    const originalText  = nameEl ? nameEl.textContent : walletName;
-
-    // Loading state
-    option.classList.add('loading');
-    if (nameEl) nameEl.textContent = 'Connecting...';
-
-    setTimeout(() => {
-      // Restore
-      option.classList.remove('loading');
-      if (nameEl) nameEl.textContent = originalText;
-
-      // Connect
-      walletState.connected = true;
-      walletState.wallet    = walletName;
-      walletState.address   = mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
-
-      // Update navbar button → connected indicator
-      updateNavbarWalletUI();
-
-      // Close modal
-      closeWalletModal();
-      showToast(`✅ ${walletName} connected!`);
-
-      // Handle pending plan
-      if (walletState.pendingPlan) {
-        const plan = walletState.pendingPlan;
-        const sol  = walletState.pendingSol;
-        walletState.pendingPlan = null;
-        walletState.pendingSol  = null;
-        openPaymentModal(plan, sol);
-      }
-    }, 1000);
-  });
-});
-
-function updateNavbarWalletUI() {
-  if (!connectWalletBtn) return;
-  if (walletState.connected) {
-    const span = document.createElement('span');
-    span.className = 'wallet-connected';
-    span.innerHTML = `<span class="wallet-dot"></span>${walletState.address}`;
-    connectWalletBtn.replaceWith(span);
-  }
-}
-
-// ── Payment Modal ──────────────────────────────────────────────────────────────
-function openPaymentModal(plan, sol) {
-  if (!paymentModal || !paymentDetails) return;
-  paymentDetails.textContent = `You are about to pay ${sol} SOL for the ${plan} plan. Please confirm the transaction.`;
-  paymentModal.removeAttribute('hidden');
-  document.body.style.overflow = 'hidden';
-}
-
-function closePaymentModal() {
-  if (!paymentModal) return;
-  paymentModal.setAttribute('hidden', '');
-  document.body.style.overflow = '';
-}
-
-if (cancelPayment) {
-  cancelPayment.addEventListener('click', closePaymentModal);
-}
-
-if (paymentModal) {
-  paymentModal.addEventListener('click', (e) => {
-    if (e.target === paymentModal) closePaymentModal();
-  });
-}
-
-if (confirmPayment) {
-  confirmPayment.addEventListener('click', () => {
-    const details = paymentDetails ? paymentDetails.textContent : '';
-    const planMatch = details.match(/for the (\w+) plan/);
-    const plan = planMatch ? planMatch[1] : 'Pro';
-    closePaymentModal();
-    showToast(`Payment sent! 🎉 Welcome to ${plan}`);
-  });
-}
-
-// ── Buy Plan Buttons ───────────────────────────────────────────────────────────
-document.querySelectorAll('[data-plan]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const plan = btn.dataset.plan;
-    const sol  = btn.dataset.sol;
-    if (!walletState.connected) {
-      walletState.pendingPlan = plan;
-      walletState.pendingSol  = sol;
-      openWalletModal();
-    } else {
-      openPaymentModal(plan, sol);
-    }
-  });
-});
-
-// ── Free Plan Button ───────────────────────────────────────────────────────────
-if (freePlanBtn) {
-  freePlanBtn.addEventListener('click', () => {
-    if (!walletState.connected) {
-      openWalletModal();
-    } else {
-      showToast("✅ You're on the Free plan!");
-    }
-  });
-}
-
-// ── Connect Wallet Triggers ────────────────────────────────────────────────────
-if (connectWalletBtn) {
-  connectWalletBtn.addEventListener('click', () => {
-    if (!walletState.connected) openWalletModal();
-  });
-}
-
-if (heroConnectBtn) {
-  heroConnectBtn.addEventListener('click', () => {
-    if (!walletState.connected) openWalletModal();
-    else showToast('✅ Wallet already connected: ' + walletState.address);
-  });
-}
-
 // ── Sticky Navbar ──────────────────────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
 if (navbar) {
   const handleNavbarScroll = () => {
     navbar.classList.toggle('scrolled', window.scrollY > 40);
@@ -255,7 +66,7 @@ const statsObserver = new IntersectionObserver(
       if (entry.isIntersecting) {
         const el     = entry.target;
         const target = parseInt(el.dataset.target, 10);
-        animateCounter(el, target, 2000); // 2s ease-out as per spec
+        animateCounter(el, target, 2000);
         statsObserver.unobserve(el);
       }
     });
@@ -297,7 +108,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
   const container = document.getElementById('particles');
   if (!container) return;
   const colors = ['#00ff88', '#00d4ff', '#7c3aed', '#ffffff'];
-  const count  = 20; // lightweight: 20 dots for performance
+  const count  = 20;
 
   for (let i = 0; i < count; i++) {
     const p    = document.createElement('div');
@@ -328,3 +139,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     }
   });
 });
+
+// ── Connect Wallet Buttons — stub for custom implementation ───────────────────
+// TODO: Add your wallet connection logic here.
+// All "Connect Wallet" buttons have the class .connect-wallet-btn
+// The navbar button has id="connectWalletBtn"
+// The hero button has id="heroConnectBtn"
+// Pricing plan buttons: id="freePlanBtn", and buttons with data-plan attribute
